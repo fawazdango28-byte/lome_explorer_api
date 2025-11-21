@@ -3,7 +3,7 @@ Django settings for lome_explorer project.
 """
 
 import os
-import dj_database_url
+# import dj_database_url
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -16,8 +16,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY SETTINGS
 # ==============================================================================
 
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-4hii4%gd^q2b%)&xvghhibcs)3elc+_(4h=9^csk)803e8-e1o')
-DEBUG = os.getenv('DEBUG', 'False') == 'True'
+SECRET_KEY = os.getenv('SECRET_KEY', 'your-default-secret-key') 
+DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
 
 
@@ -56,25 +56,25 @@ if DEBUG:
 # DATABASE CONFIGURATION
 # ==============================================================================
 
-if 'DATABASE_URL' in os.environ:
-    DATABASES = {
-        'default': dj_database_url.config(
-            default=os.environ.get('DATABASE_URL'),
-            conn_max_age=600,
-            conn_health_checks=True,
-        )
+# if 'DATABASE_URL' in os.environ:
+#     DATABASES = {
+#         'default': dj_database_url.config(
+#             default=os.environ.get('DATABASE_URL'),
+#             conn_max_age=600,
+#             conn_health_checks=True,
+#         )
+#     }
+# else:
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('DB_NAME', 'lome_explorer_db'),
+        'USER': os.environ.get('DB_USER', 'postgres'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'Doubidjinadey'),
+        'HOST': os.environ.get('DB_HOST', 'localhost'),
+        'PORT': os.environ.get('DB_PORT', '5432'),
     }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.environ.get('DB_NAME', 'lome_explorer_db'),
-            'USER': os.environ.get('DB_USER', 'postgres'),
-            'PASSWORD': os.environ.get('DB_PASSWORD', 'Doubidjinadey'),
-            'HOST': os.environ.get('DB_HOST', 'localhost'),
-            'PORT': os.environ.get('DB_PORT', '5432'),
-        }
-    }
+}
 
 # ==============================================================================
 # REDIS & CHANNEL LAYERS CONFIGURATION
@@ -83,13 +83,13 @@ else:
 # Détection automatique de l'environnement
 REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')  # 'redis' dans Docker
 REDIS_PORT = int(os.getenv('REDIS_PORT', '6379'))
-REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
+# REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
 
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.pubsub.RedisPubSubChannelLayer",
         "CONFIG": {
-            "hosts": [(REDIS_HOST, REDIS_PORT,REDIS_URL)],
+            "hosts": [(REDIS_HOST, REDIS_PORT)],
             "capacity": 1500,
             "expiry": 10,
         },
@@ -287,7 +287,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # EXTERNAL APIS
 # ==============================================================================
 
-GOOGLE_MAPS_API_KEY = os.getenv('GOOGLE_MAPS_API_KEY', 'AIzaSyD9pIxdA4T5A1LYgGqEOMk58v_Xr_-DYhk')
+GOOGLE_MAPS_API_KEY = os.getenv('GOOGLE_MAPS_API_KEY','YOUR_GOOGLE_MAPS_API_KEY_HERE')
 
 # ==============================================================================
 # EMAIL CONFIGURATION
