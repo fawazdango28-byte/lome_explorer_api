@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Événements Lomé{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #e74c3c;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --bg-light: #ecf0f1;
+        }
+
+        /* Mode sombre */
+        [data-theme="dark"] {
+            --primary-color: #34495e;
+            --secondary-color: #e74c3c;
+            --accent-color: #3498db;
+            --success-color: #27ae60;
+            --bg-light: #1a1a1a;
+            --bg-card: #2d2d2d;
+            --text-primary: #e0e0e0;
+            --text-secondary: #b0b0b0;
+            --border-color: #404040;
+        }
+
+        /* Styles mode clair */
+        [data-theme="light"] {
+            --bg-card: #ffffff;
+            --text-primary: #2c3e50;
+            --text-secondary: #7f8c8d;
+            --border-color: #e0e0e0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-primary);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Cartes adaptatives */
+        .card {
+            background-color: var(--bg-card);
+            color: var(--text-primary);
+            border-color: var(--border-color);
+        }
+
+        [data-theme="dark"] .card {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        /* Formulaires adaptatifs */
+        [data-theme="dark"] .form-control,
+        [data-theme="dark"] .form-select {
+            background-color: #3a3a3a;
+            color: #e0e0e0;
+            border-color: #555;
+        }
+
+        [data-theme="dark"] .form-control:focus,
+        [data-theme="dark"] .form-select:focus {
+            background-color: #404040;
+            color: #e0e0e0;
+            border-color: var(--accent-color);
+        }
+
+        /* Navbar adaptative */
+        [data-theme="dark"] .navbar {
+            background: linear-gradient(135deg, #1a252f, #2c3e50) !important;
+        }
+
+        /* Footer adaptatif */
+        [data-theme="dark"] footer {
+            background-color: #1a252f;
+        }
+
+        /* Stat cards adaptatifs */
+        [data-theme="dark"] .stat-card {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        /* Bouton de toggle */
+        .theme-toggle {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: white;
+            padding: 0.5rem;
+            transition: transform 0.3s ease;
+        }
+
+        .theme-toggle:hover {
+            transform: rotate(20deg);
+        }
+
+        /* Texte adaptatif */
+        [data-theme="dark"] .text-muted {
+            color: var(--text-secondary) !important;
+        }
+
+        [data-theme="dark"] .text-dark {
+            color: var(--text-primary) !important;
+        }
+
+        /* Badges adaptatifs */
+        [data-theme="dark"] .badge-category {
+            background: linear-gradient(135deg, #27ae60, #229954);
+        }
+
+        /* Alerts adaptatifs */
+        [data-theme="dark"] .alert-info {
+            background-color: #1e3a5f;
+            border-color: #2c5282;
+            color: #a0c4ff;
+        }
+
+        [data-theme="dark"] .alert-warning {
+            background-color: #5f4e1e;
+            border-color: #826c2c;
+            color: #ffd89b;
+        }
+
+        [data-theme="dark"] .alert-danger {
+            background-color: #5f1e1e;
+            border-color: #822c2c;
+            color: #ffb3b3;
+        }
+
+        [data-theme="dark"] .alert-success {
+            background-color: #1e5f2c;
+            border-color: #2c823f;
+            color: #b3ffcc;
+        }
+
+        /* Tables adaptatives */
+        [data-theme="dark"] .table {
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .table-striped tbody tr:nth-of-type(odd) {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Modals adaptatifs */
+        [data-theme="dark"] .modal-content {
+            background-color: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .modal-header {
+            border-bottom-color: var(--border-color);
+        }
+
+        [data-theme="dark"] .modal-footer {
+            border-top-color: var(--border-color);
+        }
+
+        /* Dropdown adaptatif */
+        [data-theme="dark"] .dropdown-menu {
+            background-color: var(--bg-card);
+            border-color: var(--border-color);
+        }
+
+        [data-theme="dark"] .dropdown-item {
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .dropdown-item:hover {
+            background-color: rgba(52, 152, 219, 0.2);
+        }
+
+        /* Pagination adaptive */
+        [data-theme="dark"] .page-link {
+            background-color: var(--bg-card);
+            border-color: var(--border-color);
+            color: var(--accent-color);
+        }
+
+        [data-theme="dark"] .page-link:hover {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        [data-theme="dark"] .page-item.active .page-link {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        /* Accordions adaptatifs */
+        [data-theme="dark"] .accordion-button {
+            background-color: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        [data-theme="dark"] .accordion-button:not(.collapsed) {
+            background-color: rgba(52, 152, 219, 0.2);
+        }
+
+        [data-theme="dark"] .accordion-body {
+            background-color: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-light);
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+            color: white !important;
+        }
+
+        .nav-link {
+            color: rgba(255,255,255,0.9) !important;
+            transition: color 0.3s;
+        }
+
+        .nav-link:hover {
+            color: white !important;
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, var(--accent-color), var(--secondary-color));
+            color: white;
+            padding: 80px 0;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .card-img-top {
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .btn-primary {
+            background-color: var(--accent-color);
+            border: none;
+            border-radius: 25px;
+            padding: 10px 30px;
+            transition: background-color 0.3s;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            border: none;
+            border-radius: 25px;
+            padding: 10px 30px;
+        }
+
+        .badge-category {
+            background-color: var(--success-color);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+
+        .rating-stars {
+            color: #f39c12;
+        }
+
+        footer {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 40px 0;
+            margin-top: 60px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .stat-card i {
+            font-size: 3rem;
+            color: var(--accent-color);
+            margin-bottom: 15px;
+        }
+
+        .stat-card h3 {
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        .search-box {
+            border-radius: 25px;
+            border: 2px solid var(--accent-color);
+            padding: 10px 20px;
+        }
+
+        .location-badge {
+            background-color: rgba(231, 76, 60, 0.1);
+            color: var(--secondary-color);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'index' %}">
+                <i class="fas fa-calendar-alt"></i> Événements Lomé
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'index' %}">
+                            <i class="fas fa-home"></i> Accueil
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'liste_evenements' %}">
+                            <i class="fas fa-calendar"></i> Événements
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'liste_lieux' %}">
+                            <i class="fas fa-map-marker-alt"></i> Lieux
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'carte_interactive' %}">
+                            <i class="fas fa-map"></i> Carte
+                        </a>
+                    </li>
+                    
+                    <!-- Bouton mode sombre/clair -->
+                    <li class="nav-item">
+                        <button class="theme-toggle nav-link" id="themeToggle" title="Changer de thème">
+                            <i class="fas fa-moon" id="themeIcon"></i>
+                        </button>
+                    </li>
+                    
+                    {% if user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user"></i> {{ user.username }}
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{% url 'profile_front' %}">Mon Profil</a></li>
+                                <li><a class="dropdown-item" href="{% url 'create_lieu' %}">Créer un Lieu</a></li>
+                                <li><a class="dropdown-item" href="{% url 'create_evenement' %}">Créer un Événement</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'logout_front' %}">Déconnexion</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login_front' %}">
+                                <i class="fas fa-sign-in-alt"></i> Connexion
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'register_front' %}">
+                                <i class="fas fa-user-plus"></i> Inscription
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages Flash -->
+    {% if messages %}
+        <div class="container mt-3">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Contenu Principal -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4">
+                    <h5><i class="fas fa-calendar-alt"></i> Événements Lomé</h5>
+                    <p>Découvrez les meilleurs événements et lieux de Lomé, Togo.</p>
+                </div>
+                <div class="col-md-4">
+                    <h5>Liens Rapides</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="{% url 'liste_evenements' %}" class="text-white">Événements</a></li>
+                        <li><a href="{% url 'liste_lieux' %}" class="text-white">Lieux</a></li>
+                        <li><a href="{% url 'carte_interactive' %}" class="text-white">Carte Interactive</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5>Contact</h5>
+                    <p>
+                        <i class="fas fa-envelope"></i> contact@evenementslome.tg<br>
+                        <i class="fas fa-phone"></i> +228 71 86 18 89
+                    </p>
+                    <div class="mt-3">
+                        <a href="#" class="text-white me-3"><i class="fab fa-facebook fa-2x"></i></a>
+                        <a href="#" class="text-white me-3"><i class="fab fa-twitter fa-2x"></i></a>
+                        <a href="#" class="text-white"><i class="fab fa-instagram fa-2x"></i></a>
+                    </div>
+                </div>
+            </div>
+            <hr class="bg-white">
+            <div class="text-center">
+                <p>&copy; 2025 Événements Lomé. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Script de gestion du thème -->
+    <script>
+        // Fonction pour définir le thème
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            
+            // Mettre à jour l'icône
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            }
+        }
+        
+        // Charger le thème au chargement de la page
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            setTheme(savedTheme);
+            
+            // Bouton de basculement
+            const themeToggle = document.getElementById('themeToggle');
+            if (themeToggle) {
+                themeToggle.addEventListener('click', function() {
+                    const currentTheme = document.documentElement.getAttribute('data-theme');
+                    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                    setTheme(newTheme);
+                });
+            }
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

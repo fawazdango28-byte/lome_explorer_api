@@ -1,0 +1,46 @@
+services:
+  # Service Web (Django/Daphne)
+  - type: web
+    name: lome-explorer-api
+    env: python
+    region: oregon
+    plan: free
+    branch: main
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.txt
+      python manage.py collectstatic --noinput
+      python manage.py migrate
+    startCommand: daphne -b 0.0.0.0 -p $PORT lome_explorer.asgi:application
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: False
+      - key: ALLOWED_HOSTS
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: lome-explorer-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: lome-explorer-redis
+          type: redis
+          property: connectionString
+
+  # Service Redis
+  - type: redis
+    name: lome-explorer-redis
+    plan: free
+    maxmemoryPolicy: noeviction
+    ipAllowList: []
+
+# Base de données PostgreSQL
+databases:
+  - name: lome-explorer-db
+    plan: free
+    databaseName: lome_explorer_db
+    user: prostgres

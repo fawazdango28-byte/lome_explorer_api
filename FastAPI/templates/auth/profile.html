@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+
+{% block title %}Mon Profil - {{ user.username }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-3">
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <i class="fas fa-user-circle fa-5x text-primary"></i>
+                    </div>
+                    <h4>{{ user.username }}</h4>
+                    <p class="text-muted">{{ user.email }}</p>
+                    {% if user.tel %}
+                    <p class="text-muted">
+                        <i class="fas fa-phone"></i> {{ user.tel }}
+                    </p>
+                    {% endif %}
+                    <p class="text-muted">
+                        <small>Membre depuis {{ user.date_creation|date:"F Y" }}</small>
+                    </p>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="text-muted mb-3">Statistiques</h6>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span><i class="fas fa-map-marker-alt text-danger"></i> Lieux</span>
+                        <strong>{{ mes_lieux.count }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span><i class="fas fa-calendar text-primary"></i> Événements</span>
+                        <strong>{{ mes_evenements.count }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span><i class="fas fa-star text-warning"></i> Avis donnés</span>
+                        <strong>{{ avis_lieux.count|add:avis_evenements.count }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Contenu principal -->
+        <div class="col-lg-9">
+            <!-- Onglets -->
+            <ul class="nav nav-tabs mb-4" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" data-bs-toggle="tab" href="#lieux">
+                        <i class="fas fa-map-marker-alt"></i> Mes Lieux ({{ mes_lieux.count }})
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#evenements">
+                        <i class="fas fa-calendar"></i> Mes Événements ({{ mes_evenements.count }})
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" data-bs-toggle="tab" href="#avis">
+                        <i class="fas fa-comments"></i> Mes Avis ({{ avis_lieux.count|add:avis_evenements.count }})
+                    </a>
+                </li>
+            </ul>
+            
+            <div class="tab-content">
+                <!-- Onglet Lieux -->
+                <div class="tab-pane fade show active" id="lieux">
+                    {% if mes_lieux %}
+                    <div class="row g-3">
+                        {% for lieu in mes_lieux %}
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <h5 class="card-title">{{ lieu.nom }}</h5>
+                                        <span class="badge bg-secondary">{{ lieu.categorie }}</span>
+                                    </div>
+                                    <p class="card-text text-muted">{{ lieu.description|truncatewords:15 }}</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar"></i> {{ lieu.evenements.count }} événement(s)
+                                        </small>
+                                        <div>
+                                            <a href="{% url 'detail_lieu' lieu.id %}" class="btn btn-sm btn-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{% url 'edit_lieu' lieu.id %}" class="btn btn-sm btn-warning">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info text-center">
+                        <i class="fas fa-info-circle"></i> Vous n'avez pas encore créé de lieu.
+                        <a href="{% url 'create_lieu' %}" class="alert-link">Créer un lieu</a>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Onglet Événements -->
+                <div class="tab-pane fade" id="evenements">
+                    {% if mes_evenements %}
+                    <div class="row g-3">
+                        {% for evenement in mes_evenements %}
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ evenement.nom }}</h5>
+                                    <p class="card-text">
+                                        <i class="fas fa-map-marker-alt text-danger"></i> {{ evenement.lieu.nom }}
+                                    </p>
+                                    <p class="card-text">
+                                        <i class="fas fa-calendar"></i> {{ evenement.date_debut|date:"d/m/Y H:i" }}
+                                    </p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">
+                                            <i class="fas fa-comments"></i> {{ evenement.avis.count }} avis
+                                        </small>
+                                        <div>
+                                            <a href="{% url 'detail_evenement' evenement.id %}" class="btn btn-sm btn-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{% url 'edit_evenement' evenement.id %}" class="btn btn-sm btn-warning">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info text-center">
+                        <i class="fas fa-info-circle"></i> Vous n'avez pas encore organisé d'événement.
+                        <a href="{% url 'create_evenement' %}" class="alert-link">Créer un événement</a>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Onglet Avis -->
+                <div class="tab-pane fade" id="avis">
+                    {% if avis_lieux or avis_evenements %}
+                    <div class="accordion" id="avisAccordion">
+                        {% for avis in avis_lieux %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#avis-lieu-{{ forloop.counter }}">
+                                    <div class="rating-stars me-2">
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= avis.note %}
+                                                <i class="fas fa-star"></i>
+                                            {% else %}
+                                                <i class="far fa-star"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                    Avis sur {{ avis.lieu.nom }} - {{ avis.date|date:"d/m/Y" }}
+                                </button>
+                            </h2>
+                            <div id="avis-lieu-{{ forloop.counter }}" class="accordion-collapse collapse">
+                                <div class="accordion-body">
+                                    {{ avis.texte }}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        
+                        {% for avis in avis_evenements %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#avis-evt-{{ forloop.counter }}">
+                                    <div class="rating-stars me-2">
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= avis.note %}
+                                                <i class="fas fa-star"></i>
+                                            {% else %}
+                                                <i class="far fa-star"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                    Avis sur {{ avis.evenement.nom }} - {{ avis.date|date:"d/m/Y" }}
+                                </button>
+                            </h2>
+                            <div id="avis-evt-{{ forloop.counter }}" class="accordion-collapse collapse">
+                                <div class="accordion-body">
+                                    {{ avis.texte }}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info text-center">
+                        <i class="fas fa-info-circle"></i> Vous n'avez pas encore donné d'avis.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

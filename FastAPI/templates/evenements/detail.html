@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ evenement.nom }} - Événements Lomé{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <!-- Informations principales -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <span class="badge badge-category mb-3">
+                        {{ evenement.lieu.categorie }}
+                    </span>
+                    
+                    <h1 class="mb-4">{{ evenement.nom }}</h1>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <p class="mb-2">
+                                <i class="fas fa-calendar text-primary"></i>
+                                <strong>Date de début:</strong><br>
+                                {{ evenement.date_debut|date:"l d F Y à H:i" }}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2">
+                                <i class="fas fa-calendar-check text-success"></i>
+                                <strong>Date de fin:</strong><br>
+                                {{ evenement.date_fin|date:"l d F Y à H:i" }}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <i class="fas fa-map-marker-alt text-danger"></i>
+                        <strong>Lieu:</strong>
+                        <a href="{% url 'detail_lieu' evenement.lieu.id %}" class="text-decoration-none">
+                            {{ evenement.lieu.nom }}
+                        </a>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <i class="fas fa-user text-info"></i>
+                        <strong>Organisé par:</strong>
+                        {{ evenement.organisateur.username }}
+                    </div>
+                    
+                    <hr>
+                    
+                    <h4 class="mb-3">Description</h4>
+                    <p class="text-justify">{{ evenement.description }}</p>
+                </div>
+            </div>
+            
+            <!-- Section Avis -->
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-comments"></i> Avis 
+                        {% if moyenne_avis %}
+                        <span class="rating-stars">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= moyenne_avis %}
+                                    <i class="fas fa-star"></i>
+                                {% else %}
+                                    <i class="far fa-star"></i>
+                                {% endif %}
+                            {% endfor %}
+                            ({{ moyenne_avis|floatformat:1 }})
+                        </span>
+                        {% endif %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if avis %}
+                        {% for avis_item in avis %}
+                        <div class="mb-3 pb-3 {% if not forloop.last %}border-bottom{% endif %}">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>{{ avis_item.utilisateur.username }}</strong>
+                                    <div class="rating-stars">
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= avis_item.note %}
+                                                <i class="fas fa-star"></i>
+                                            {% else %}
+                                                <i class="far fa-star"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <small class="text-muted">{{ avis_item.date|date:"d/m/Y" }}</small>
+                            </div>
+                            <p class="mt-2 mb-0">{{ avis_item.texte }}</p>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center">
+                            <i class="fas fa-info-circle"></i> Aucun avis pour le moment.
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Carte du lieu -->
+            <div class="card mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-map"></i> Localisation
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>{{ evenement.lieu.nom }}</strong></p>
+                    <p class="text-muted">{{ evenement.lieu.description|truncatewords:20 }}</p>
+                    <div id="map" style="height: 250px; background: #e0e0e0; border-radius: 10px;">
+                        <div class="d-flex align-items-center justify-content-center h-100">
+                            <div class="text-center">
+                                <i class="fas fa-map-marker-alt fa-3x text-danger"></i>
+                                <p class="mt-2">Lat: {{ evenement.lieu.latitude }}</p>
+                                <p>Long: {{ evenement.lieu.longitude }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="{% url 'detail_lieu' evenement.lieu.id %}" class="btn btn-outline-primary w-100 mt-3">
+                        Voir le lieu
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Actions -->
+            {% if user.is_authenticated %}
+            <div class="card mb-4">
+                <div class="card-body">
+                    {% if user == evenement.organisateur %}
+                    <a href="{% url 'edit_evenement' evenement.id %}" class="btn btn-warning w-100 mb-2">
+                        <i class="fas fa-edit"></i> Modifier
+                    </a>
+                    <button type="button" class="btn btn-danger w-100" data-bs-toggle="modal" 
+                            data-bs-target="#deleteModal">
+                        <i class="fas fa-trash"></i> Supprimer
+                    </button>
+                    {% else %}
+                    <button class="btn btn-success w-100 mb-2">
+                        <i class="fas fa-check"></i> Participer
+                    </button>
+                    <button class="btn btn-outline-primary w-100">
+                        <i class="fas fa-share"></i> Partager
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Événements similaires -->
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-alt"></i> Événements similaires
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Fonctionnalité à venir...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmation de suppression -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle"></i> Confirmer la suppression
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir supprimer l'événement <strong>{{ evenement.nom }}</strong> ?</p>
+                <p class="text-danger">
+                    <i class="fas fa-exclamation-circle"></i>
+                    Cette action est irréversible et supprimera également :
+                </p>
+                <ul>
+                    <li>Tous les avis sur cet événement ({{ avis.count }})</li>
+                    <li>Toutes les notifications liées à cet événement</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Annuler
+                </button>
+                <form method="POST" action="{% url 'delete_evenement' evenement.id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Oui, supprimer définitivement
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

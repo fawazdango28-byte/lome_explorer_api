@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}Créer un événement - Événements Lomé{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-calendar-plus"></i> Créer un nouvel événement
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="nom" class="form-label">
+                                Nom de l'événement <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="nom" name="nom" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">
+                                Description <span class="text-danger">*</span>
+                            </label>
+                            <textarea class="form-control" id="description" name="description" rows="5" required></textarea>
+                            <div class="form-text">Décrivez votre événement en détail</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="lieu" class="form-label">
+                                Lieu <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="lieu" name="lieu" required>
+                                <option value="">Sélectionnez un lieu</option>
+                                {% for lieu in lieux %}
+                                <option value="{{ lieu.id }}">{{ lieu.nom }} - {{ lieu.categorie }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">
+                                Vous ne trouvez pas votre lieu ? 
+                                <a href="{% url 'create_lieu' %}" target="_blank">Créer un nouveau lieu</a>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="date_debut" class="form-label">
+                                    Date et heure de début <span class="text-danger">*</span>
+                                </label>
+                                <input type="datetime-local" class="form-control" id="date_debut" name="date_debut" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="date_fin" class="form-label">
+                                    Date et heure de fin <span class="text-danger">*</span>
+                                </label>
+                                <input type="datetime-local" class="form-control" id="date_fin" name="date_fin" required>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Astuce:</strong> Assurez-vous que la date de fin soit postérieure à la date de début.
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save"></i> Créer l'événement
+                            </button>
+                            <a href="{% url 'liste_evenements' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i> Annuler
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Validation du formulaire
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const dateDebut = new Date(document.getElementById('date_debut').value);
+        const dateFin = new Date(document.getElementById('date_fin').value);
+        
+        if (dateFin <= dateDebut) {
+            e.preventDefault();
+            alert('La date de fin doit être postérieure à la date de début');
+            return false;
+        }
+        
+        const now = new Date();
+        if (dateDebut < now) {
+            if (!confirm('La date de début est dans le passé. Voulez-vous continuer ?')) {
+                e.preventDefault();
+                return false;
+            }
+        }
+    });
+    
+    // Définir une date minimale (aujourd'hui)
+    const today = new Date().toISOString().slice(0, 16);
+    document.getElementById('date_debut').min = today;
+    document.getElementById('date_fin').min = today;
+</script>
+{% endblock %}

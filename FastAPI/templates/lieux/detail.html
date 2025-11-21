@@ -1,0 +1,231 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ lieu.nom }} - Événements Lomé{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <span class="badge bg-secondary mb-3">{{ lieu.categorie }}</span>
+                    
+                    <h1 class="mb-4">{{ lieu.nom }}</h1>
+                    
+                    <div class="mb-4">
+                        <i class="fas fa-user text-info"></i>
+                        <strong>Propriétaire:</strong> {{ lieu.proprietaire.username }}
+                    </div>
+                    
+                    <div class="mb-4">
+                        <i class="fas fa-map-marker-alt text-danger"></i>
+                        <strong>Localisation:</strong> Lomé, Togo<br>
+                        <small class="text-muted">
+                            Coordonnées GPS: {{ lieu.latitude }}, {{ lieu.longitude }}
+                        </small>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <i class="fas fa-calendar text-primary"></i>
+                        <strong>Ajouté le:</strong> {{ lieu.date_creation|date:"d F Y" }}
+                    </div>
+                    
+                    <hr>
+                    
+                    <h4 class="mb-3">Description</h4>
+                    <p class="text-justify">{{ lieu.description }}</p>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-calendar-alt"></i> Événements à venir
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if evenements %}
+                        <div class="row g-3">
+                            {% for evenement in evenements %}
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h6 class="card-title">{{ evenement.nom }}</h6>
+                                        <p class="card-text">
+                                            <i class="fas fa-calendar"></i> {{ evenement.date_debut|date:"d/m/Y" }}<br>
+                                            <i class="fas fa-clock"></i> {{ evenement.date_debut|date:"H:i" }} - {{ evenement.date_fin|date:"H:i" }}
+                                        </p>
+                                        <a href="{% url 'detail_evenement' evenement.id %}" class="btn btn-sm btn-primary">
+                                            Voir détails
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center">
+                            <i class="fas fa-info-circle"></i> Aucun événement à venir pour ce lieu.
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0">
+                        <i class="fas fa-comments"></i> Avis
+                        {% if moyenne_avis %}
+                        <span class="rating-stars">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= moyenne_avis %}
+                                    <i class="fas fa-star"></i>
+                                {% else %}
+                                    <i class="far fa-star"></i>
+                                {% endif %}
+                            {% endfor %}
+                            ({{ moyenne_avis|floatformat:1 }})
+                        </span>
+                        {% endif %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if avis %}
+                        {% for avis_item in avis %}
+                        <div class="mb-3 pb-3 {% if not forloop.last %}border-bottom{% endif %}">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>{{ avis_item.utilisateur.username }}</strong>
+                                    <div class="rating-stars">
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= avis_item.note %}
+                                                <i class="fas fa-star"></i>
+                                            {% else %}
+                                                <i class="far fa-star"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <small class="text-muted">{{ avis_item.date|date:"d/m/Y" }}</small>
+                            </div>
+                            <p class="mt-2 mb-0">{{ avis_item.texte }}</p>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center">
+                            <i class="fas fa-info-circle"></i> Aucun avis pour le moment.
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-map"></i> Localisation
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="map" style="height: 250px; background: #e0e0e0; border-radius: 10px;">
+                        <div class="d-flex align-items-center justify-content-center h-100">
+                            <div class="text-center">
+                                <i class="fas fa-map-marker-alt fa-3x text-danger"></i>
+                                <p class="mt-2 mb-1"><strong>{{ lieu.nom }}</strong></p>
+                                <p class="mb-0"><small>Lat: {{ lieu.latitude }}</small></p>
+                                <p><small>Long: {{ lieu.longitude }}</small></p>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="{% url 'carte_interactive' %}?lieu={{ lieu.id }}" class="btn btn-outline-primary w-100 mt-3">
+                        <i class="fas fa-map"></i> Voir sur la carte
+                    </a>
+                </div>
+            </div>
+            
+            {% if user.is_authenticated %}
+            <div class="card mb-4">
+                <div class="card-body">
+                    {% if user == lieu.proprietaire %}
+                    <a href="{% url 'edit_lieu' lieu.id %}" class="btn btn-warning w-100 mb-2">
+                        <i class="fas fa-edit"></i> Modifier
+                    </a>
+                    <button type="button" class="btn btn-danger w-100" data-bs-toggle="modal" 
+                            data-bs-target="#deleteModal">
+                        <i class="fas fa-trash"></i> Supprimer
+                    </button>
+                    {% else %}
+                    <button class="btn btn-success w-100 mb-2">
+                        <i class="fas fa-star"></i> Laisser un avis
+                    </button>
+                    <button class="btn btn-outline-primary w-100">
+                        <i class="fas fa-share"></i> Partager
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar"></i> Statistiques
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span><i class="fas fa-calendar"></i> Événements</span>
+                        <strong>{{ evenements.count }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span><i class="fas fa-comments"></i> Avis</span>
+                        <strong>{{ avis.count }}</strong>
+                    </div>
+                    {% if moyenne_avis %}
+                    <div class="d-flex justify-content-between">
+                        <span><i class="fas fa-star"></i> Note moyenne</span>
+                        <strong>{{ moyenne_avis|floatformat:1 }}/5</strong>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle"></i> Confirmer la suppression
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir supprimer <strong>{{ lieu.nom }}</strong> ?</p>
+                <p class="text-danger">
+                    <i class="fas fa-exclamation-circle"></i>
+                    Cette action est irréversible et supprimera également :
+                </p>
+                <ul>
+                    <li>Tous les événements associés ({{ evenements.count }})</li>
+                    <li>Tous les avis sur ce lieu ({{ avis.count }})</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Annuler
+                </button>
+                <form method="POST" action="{% url 'delete_lieu' lieu.id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Oui, supprimer définitivement
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

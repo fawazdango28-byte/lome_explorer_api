@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Accueil - Événements Lomé{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="container text-center">
+        <h1 class="display-3 fw-bold mb-4">
+            <i class="fas fa-map-marker-alt"></i> Découvrez Lomé
+        </h1>
+        <p class="lead mb-4">
+            Trouvez les meilleurs événements et lieux culturels de Lomé
+        </p>
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <form method="GET" action="{% url 'liste_evenements' %}" class="input-group mb-3">
+                    <input type="text" name="search" class="form-control form-control-lg search-box" 
+                           placeholder="Rechercher un événement, un lieu...">
+                    <button class="btn btn-light btn-lg" type="submit">
+                        <i class="fas fa-search"></i> Rechercher
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistiques -->
+<div class="container mb-5">
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <i class="fas fa-map-marked-alt"></i>
+                <h3>{{ stats.total_lieux }}</h3>
+                <p class="text-muted">Lieux Disponibles</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <i class="fas fa-calendar-check"></i>
+                <h3>{{ stats.total_evenements }}</h3>
+                <p class="text-muted">Événements au Total</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <i class="fas fa-clock"></i>
+                <h3>{{ stats.evenements_a_venir }}</h3>
+                <p class="text-muted">Événements à Venir</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Événements à Venir -->
+<div class="container mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-star text-warning"></i> Événements à Venir</h2>
+        <a href="{% url 'liste_evenements' %}" class="btn btn-outline-primary">
+            Voir tous <i class="fas fa-arrow-right"></i>
+        </a>
+    </div>
+    
+    <div class="row g-4">
+        {% for evenement in evenements_a_venir %}
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <span class="badge badge-category mb-2">
+                        {{ evenement.lieu.categorie }}
+                    </span>
+                    <h5 class="card-title">{{ evenement.nom }}</h5>
+                    <p class="card-text text-muted">
+                        <i class="fas fa-map-marker-alt"></i> {{ evenement.lieu.nom }}
+                    </p>
+                    <p class="card-text">
+                        <i class="fas fa-calendar"></i> 
+                        {{ evenement.date_debut|date:"d M Y" }}
+                    </p>
+                    <p class="card-text">
+                        <i class="fas fa-clock"></i> 
+                        {{ evenement.date_debut|date:"H:i" }}
+                    </p>
+                    <a href="{% url 'detail_evenement' evenement.id %}" class="btn btn-primary w-100">
+                        En savoir plus
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info text-center">
+                <i class="fas fa-info-circle"></i> Aucun événement à venir pour le moment.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Lieux Populaires -->
+<div class="container mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-fire text-danger"></i> Lieux Populaires</h2>
+        <a href="{% url 'liste_lieux' %}" class="btn btn-outline-secondary">
+            Voir tous <i class="fas fa-arrow-right"></i>
+        </a>
+    </div>
+    
+    <div class="row g-4">
+        {% for lieu in lieux_populaires %}
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ lieu.nom }}</h5>
+                    <span class="badge bg-secondary mb-2">{{ lieu.categorie }}</span>
+                    <p class="card-text text-muted">
+                        {{ lieu.description|truncatewords:20 }}
+                    </p>
+                    <p class="location-badge">
+                        <i class="fas fa-map-marker-alt"></i> 
+                        Lomé, Togo
+                    </p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted">
+                            <i class="fas fa-calendar-alt"></i> 
+                            {{ lieu.nb_evenements }} événement(s)
+                        </span>
+                        <a href="{% url 'detail_lieu' lieu.id %}" class="btn btn-sm btn-outline-primary">
+                            Détails
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info text-center">
+                <i class="fas fa-info-circle"></i> Aucun lieu disponible pour le moment.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Call to Action -->
+<div class="container mb-5">
+    <div class="card text-center" style="background: linear-gradient(135deg, #3498db, #e74c3c); color: white;">
+        <div class="card-body py-5">
+            <h2 class="mb-4">Organisez Votre Propre Événement</h2>
+            <p class="lead mb-4">
+                Partagez vos événements avec la communauté de Lomé
+            </p>
+            {% if user.is_authenticated %}
+                <a href="{% url 'create_evenement' %}" class="btn btn-light btn-lg">
+                    <i class="fas fa-plus-circle"></i> Créer un Événement
+                </a>
+            {% else %}
+                <a href="{% url 'register' %}" class="btn btn-light btn-lg">
+                    <i class="fas fa-user-plus"></i> S'inscrire Gratuitement
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

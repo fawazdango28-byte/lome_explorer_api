@@ -1,0 +1,364 @@
+{% extends 'base.html' %}
+
+{% block title %}Carte Interactive - Événements Lomé{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+<style>
+    /* Styles pour la carte */
+    #map {
+        height: 600px;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    /* Style pour le contenu de la popup Leaflet */
+    .leaflet-popup-content {
+        text-align: center;
+    }
+    /* Style pour le panneau des contrôles/filtres */
+    .map-controls {
+        background: white;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    /* Style pour le conteneur du moteur d'itinéraire */
+    .leaflet-routing-container {
+        background: white;
+        padding: 10px;
+        border-radius: 10px;
+    }
+    /* Style pour l'affichage de la distance/durée */
+    .route-info {
+        background: #e3f2fd;
+        padding: 10px;
+        border-radius: 8px;
+        margin-top: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-5">
+    <h1 class="text-center mb-4">
+        <i class="fas fa-map"></i> Carte Interactive de Lomé
+    </h1>
+    
+    <div class="row">
+        <div class="col-lg-3 mb-4">
+            
+            <div class="map-controls">
+                <h5 class="mb-3"><i class="fas fa-filter"></i> Filtres</h5>
+                
+                <div class="mb-3">
+                    <label class="form-label">Afficher</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="showLieux" checked>
+                        <label class="form-check-label" for="showLieux">
+                            <i class="fas fa-map-marker-alt text-danger"></i> Lieux
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="showEvents" checked>
+                        <label class="form-check-label" for="showEvents">
+                            <i class="fas fa-calendar text-primary"></i> Événements
+                        </label>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                <h5 class="mb-3"><i class="fas fa-route"></i> Itinéraire</h5>
+                <button class="btn btn-success w-100 mb-2" id="getMyLocation">
+                    <i class="fas fa-crosshairs"></i> Ma position
+                </button>
+                <button class="btn btn-danger w-100 mb-2" id="clearRoute" style="display:none;">
+                    <i class="fas fa-times"></i> Effacer l'itinéraire
+                </button>
+                
+                <div id="routeInfo" class="route-info" style="display:none;">
+                    <strong>Distance:</strong> <span id="routeDistance"></span><br>
+                    <strong>Durée:</strong> <span id="routeDuration"></span>
+                </div>
+                
+                <hr>
+                
+                <h6 class="mb-3">Légende</h6>
+                <div class="mb-2">
+                    <i class="fas fa-map-marker-alt fa-2x text-danger"></i> Lieu
+                </div>
+                <div class="mb-2">
+                    <i class="fas fa-calendar fa-2x text-primary"></i> Événement
+                </div>
+                <div class="mb-2">
+                    <i class="fas fa-map-pin fa-2x text-success"></i> Ma position
+                </div>
+                
+                <hr>
+                
+                <div class="alert alert-info">
+                    <small>
+                        <i class="fas fa-info-circle"></i>
+                        Cliquez sur un marqueur puis "Voir l'itinéraire" pour tracer le chemin
+                    </small>
+                </div>
+            </div>
+            
+            <div class="map-controls mt-3">
+                <h6>Statistiques</h6>
+                <p class="mb-1">
+                    <i class="fas fa-map-marker-alt text-danger"></i>
+                    {{ lieux.count }} lieux
+                </p>
+                <p class="mb-0">
+                    <i class="fas fa-calendar text-primary"></i>
+                    {{ evenements.count }} événements
+                </p>
+            </div>
+        </div>
+        
+        <div class="col-lg-9">
+            <div id="map"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+<script>
+    // ------------------------------------------------------------------
+    // 1. Initialisation et Variables Globales
+    // ------------------------------------------------------------------
+
+    // Initialisation de la carte centrée sur Lomé ([6.1319, 1.2228])
+    const map = L.map('map').setView([6.1319, 1.2228], 12);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 18
+    }).addTo(map);
+    
+    let routingControl = null;
+    let userLocation = null;
+    let userMarker = null;
+    
+    // Groupes de marqueurs pour le filtrage
+    const lieuxLayer = L.layerGroup().addTo(map);
+    const eventsLayer = L.layerGroup().addTo(map);
+    
+    // ------------------------------------------------------------------
+    // 2. Icônes personnalisées
+    // ------------------------------------------------------------------
+    
+    const lieuIcon = L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+        iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+    });
+    
+    const eventIcon = L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+        iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+    });
+    
+    const userIcon = L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+        iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+    });
+    
+    // ------------------------------------------------------------------
+    // 3. Récupération des données (Django)
+    // ------------------------------------------------------------------
+    
+    const lieuxData = {{ lieux_json|safe }};
+    
+    // Données des événements (en JSON sécurisé)
+    const eventsData = {{ evenements_json|safe }};
+    
+    // ------------------------------------------------------------------
+    // 4. Fonctions Itinéraire et Marqueurs
+    // ------------------------------------------------------------------
+
+    // Crée/Met à jour la ligne d'itinéraire sur la carte
+    function createRoute(startLat, startLng, endLat, endLng) {
+        // Supprimer l'ancien itinéraire s'il existe
+        if (routingControl) {
+            map.removeControl(routingControl);
+        }
+        
+        // Créer un nouvel itinéraire
+        routingControl = L.Routing.control({
+            waypoints: [
+                L.latLng(startLat, startLng),
+                L.latLng(endLat, endLng)
+            ],
+            routeWhileDragging: true,
+            showAlternatives: false,
+            language: 'fr',
+            lineOptions: {
+                styles: [{color: '#3498db', opacity: 0.8, weight: 6}]
+            },
+            createMarker: function() { return null; }, // Ne pas créer de marqueurs supplémentaires pour le routage
+        }).addTo(map);
+        
+        // Afficher les informations sur l'itinéraire
+        routingControl.on('routesfound', function(e) {
+            const routes = e.routes;
+            const summary = routes[0].summary;
+            
+            const distance = (summary.totalDistance / 1000).toFixed(2);
+            const time = Math.round(summary.totalTime / 60);
+            
+            document.getElementById('routeDistance').textContent = distance + ' km';
+            document.getElementById('routeDuration').textContent = time + ' min';
+            document.getElementById('routeInfo').style.display = 'block';
+            document.getElementById('clearRoute').style.display = 'block';
+        });
+    }
+
+    // Fonction globale accessible depuis les popups des marqueurs
+    window.showRouteTo = function(lat, lng, name) {
+        if (userLocation) {
+            createRoute(userLocation.lat, userLocation.lng, lat, lng);
+        } else {
+            alert('Veuillez d\'abord activer votre position en cliquant sur "Ma position".');
+        }
+    };
+    
+    // Met à jour les popups pour ajouter le bouton "Voir l'itinéraire"
+    function updateMarkerPopups() {
+        lieuxLayer.clearLayers();
+        eventsLayer.clearLayers();
+        
+        const routeButton = (lat, lng, name) => 
+            userLocation ? 
+                `<button class="btn btn-sm btn-success" onclick="showRouteTo(${lat}, ${lng}, '${name}')">
+                    <i class="fas fa-route"></i> Voir l'itinéraire
+                </button>` : 
+                '<small class="text-muted">Activez votre position pour voir l\'itinéraire</small>';
+
+        // Réajouter les lieux
+        lieuxData.forEach(lieu => {
+            const marker = L.marker([lieu.lat, lieu.lng], {icon: lieuIcon})
+                .bindPopup(`
+                    <div style="text-align: center;">
+                        <h6>${lieu.nom}</h6>
+                        <span class="badge bg-secondary">${lieu.categorie}</span>
+                        <p class="mt-2 mb-2">${lieu.description}</p>
+                        <a href="${lieu.url}" class="btn btn-sm btn-primary mb-2">
+                            <i class="fas fa-info-circle"></i> Détails
+                        </a><br>
+                        ${routeButton(lieu.lat, lieu.lng, lieu.nom)}
+                    </div>
+                `);
+            lieuxLayer.addLayer(marker);
+        });
+        
+        // Réajouter les événements
+        eventsData.forEach(event => {
+            const marker = L.marker([event.lat, event.lng], {icon: eventIcon})
+                .bindPopup(`
+                    <div style="text-align: center;">
+                        <h6>${event.nom}</h6>
+                        <p class="mb-1"><i class="fas fa-map-marker-alt"></i> ${event.lieu}</p>
+                        <p class="mb-2"><i class="fas fa-calendar"></i> ${event.date}</p>
+                        <a href="${event.url}" class="btn btn-sm btn-primary mb-2">
+                            <i class="fas fa-info-circle"></i> Détails
+                        </a><br>
+                        ${routeButton(event.lat, event.lng, event.nom)}
+                    </div>
+                `);
+            eventsLayer.addLayer(marker);
+        });
+    }
+
+    // Appel initial pour ajouter les marqueurs sans le bouton d'itinéraire
+    updateMarkerPopups();
+    
+    // ------------------------------------------------------------------
+    // 5. Gestion des Événements
+    // ------------------------------------------------------------------
+    
+    // Obtenir la position de l'utilisateur
+    document.getElementById('getMyLocation').addEventListener('click', function() {
+        if (navigator.geolocation) {
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Localisation...';
+            this.disabled = true;
+            
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    userLocation = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+                    
+                    // Gérer le marqueur utilisateur
+                    if (userMarker) { map.removeLayer(userMarker); }
+                    userMarker = L.marker([userLocation.lat, userLocation.lng], {icon: userIcon})
+                        .bindPopup('<strong>Vous êtes ici</strong>')
+                        .addTo(map)
+                        .openPopup();
+                    
+                    map.setView([userLocation.lat, userLocation.lng], 14);
+                    
+                    this.innerHTML = '<i class="fas fa-check"></i> Position activée';
+                    this.classList.remove('btn-success');
+                    this.classList.add('btn-info');
+                    this.disabled = false;
+                    
+                    // Mettre à jour les popups avec les boutons d'itinéraire
+                    updateMarkerPopups();
+                },
+                (error) => {
+                    alert('Erreur de géolocalisation: ' + error.message);
+                    this.innerHTML = '<i class="fas fa-crosshairs"></i> Ma position';
+                    this.classList.remove('btn-info');
+                    this.classList.add('btn-success');
+                    this.disabled = false;
+                }
+            );
+        } else {
+            alert('La géolocalisation n\'est pas supportée par votre navigateur');
+        }
+    });
+    
+    // Effacer l'itinéraire
+    document.getElementById('clearRoute').addEventListener('click', function() {
+        if (routingControl) {
+            map.removeControl(routingControl);
+            routingControl = null;
+            document.getElementById('routeInfo').style.display = 'none';
+            this.style.display = 'none';
+        }
+    });
+    
+    // Contrôles de filtrage
+    document.getElementById('showLieux').addEventListener('change', function() {
+        if (this.checked) {
+            map.addLayer(lieuxLayer);
+        } else {
+            map.removeLayer(lieuxLayer);
+        }
+    });
+    
+    document.getElementById('showEvents').addEventListener('change', function() {
+        if (this.checked) {
+            map.addLayer(eventsLayer);
+        } else {
+            map.removeLayer(eventsLayer);
+        }
+    });
+    
+    // Ajuster la vue initiale
+    if (lieuxData.length > 0 || eventsData.length > 0) {
+        const allMarkers = [...lieuxData, ...eventsData];
+        const bounds = L.latLngBounds(allMarkers.map(m => [m.lat, m.lng]));
+        map.fitBounds(bounds, {padding: [50, 50]});
+    }
+</script>
+{% endblock %}

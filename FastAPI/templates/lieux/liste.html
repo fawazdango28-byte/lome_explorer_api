@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block title %}Lieux - Lomé{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4">
+        <i class="fas fa-map-marked-alt"></i> Tous les Lieux
+    </h1>
+
+    <!-- Filtres -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-5">
+                    <input type="text" name="search" class="form-control" 
+                           placeholder="Rechercher un lieu..."
+                           value="{{ search_query }}">
+                </div>
+                <div class="col-md-5">
+                    <select name="categorie" class="form-select">
+                        <option value="">Toutes les catégories</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat }}" {% if cat == categorie_active %}selected{% endif %}>
+                            {{ cat }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter"></i> Filtrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Liste des lieux -->
+    <div class="row g-4">
+        {% for lieu in lieux %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <span class="badge bg-secondary">{{ lieu.categorie }}</span>
+                        <small class="text-muted">
+                            <i class="fas fa-user"></i> {{ lieu.proprietaire_nom }}
+                        </small>
+                    </div>
+                    
+                    <h5 class="card-title">{{ lieu.nom }}</h5>
+                    
+                    <p class="card-text text-muted">
+                        {{ lieu.description|truncatewords:15 }}
+                    </p>
+                    
+                    <div class="mb-2 location-badge">
+                        <i class="fas fa-map-marker-alt"></i>
+                        Lomé, Togo
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <small class="text-muted">
+                            <i class="fas fa-calendar-alt"></i>
+                            {{ lieu.nombre_evenements }} événement(s)
+                        </small>
+                        <small class="text-muted">
+                            <i class="fas fa-clock"></i>
+                            {{ lieu.date_creation|date:"d/m/Y" }}
+                        </small>
+                    </div>
+                    
+                    <a href="{% url 'detail_lieu' lieu.id %}" class="btn btn-primary w-100">
+                        <i class="fas fa-info-circle"></i> Voir les détails
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-warning text-center">
+                <i class="fas fa-exclamation-triangle"></i>
+                Aucun lieu trouvé. 
+                {% if user.is_authenticated %}
+                <a href="{% url 'create_lieu' %}" class="alert-link">
+                    Ajouter un lieu
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if lieux.has_other_pages %}
+    <nav class="mt-5">
+        <ul class="pagination justify-content-center">
+            {% if lieux.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ lieux.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if categorie_active %}&categorie={{ categorie_active }}{% endif %}">
+                    Précédent
+                </a>
+            </li>
+            {% endif %}
+            
+            {% for num in lieux.paginator.page_range %}
+                {% if lieux.number == num or num == 1 or num == lieux.paginator.num_pages or num >= lieux.number|add:'-2' and num <= lieux.number|add:'2' %}
+                <li class="page-item {% if lieux.number == num %}active{% endif %}">
+                    <a class="page-link" href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}{% if categorie_active %}&categorie={{ categorie_active }}{% endif %}">
+                        {{ num }}
+                    </a>
+                </li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if lieux.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ lieux.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if categorie_active %}&categorie={{ categorie_active }}{% endif %}">
+                    Suivant
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}
